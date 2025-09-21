@@ -4,9 +4,9 @@ import FileUpload from '@/app/components/features/FileUpload'
 const page = () => {
 
   return (
-    <>
+    <div>
       <FileUpload />
-    </>
+    </div>
   )
 }
 
