@@ -5,13 +5,43 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Upload, File, AlertCircle } from 'lucide-react'
+import Loading from '../ui/loading'
 
 const FileUpload = () => {
 
-  const [selectedFile, setSelectedFile] =useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
+  const [extractedText, setExtractedText] = useState<string>('');
+  const [isExtracting, setIsExtracting] = useState<boolean>(false);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const extractText = async (file: File) => {
+    setIsExtracting(true);
+    setError('');
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await fetch('/api/extract-text', {
+        method: 'POST',
+        body: formData
+      })
+      if(response.ok) {
+        const data = await response.json();
+        setExtractedText(data.text);
+        setError('');
+      } else {
+        setError('Failed to extract text from the document.');
+        setExtractedText('');
+      }
+    } catch (error) {
+      setError('An error occurred while extracting text.');
+      setExtractedText('');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
@@ -29,8 +59,8 @@ const FileUpload = () => {
 
   const handleAnalyze = () => {
     if (selectedFile) {
-      // Implement the analysis logic here
-      console.log('Analyzing file:', selectedFile);
+      setIsExtracting(true);
+      extractText(selectedFile);
     }
   }
 
@@ -92,12 +122,16 @@ const FileUpload = () => {
                   </p>
                 </div>
               </div>
-              <Button 
-                onClick={handleAnalyze}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                Analyze Document
-              </Button>
+              {isExtracting ? (
+                <Loading />
+              ) : (
+                <Button
+                  onClick={handleAnalyze}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Analyze Document
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
