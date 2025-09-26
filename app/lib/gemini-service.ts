@@ -1,8 +1,17 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { IAnalyzeResult } from "../types";
+import { IAnalyzeResult, AnalyzeResultSchema } from "../types";
 
 if(!process.env.GEMINI_API_KEY) {
   throw new Error("GEMINI_API_KEY is not set");
+}
+
+function extractJSON(text: string): string {
+    // Remove markdown code blocks
+    const cleaned = text.replace(/```json\s*|\s*```/g, '');
+    // Find JSON object boundaries
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}') + 1;
+    return cleaned.slice(start, end);
 }
 
 export async function analyzeDocument(text: string): Promise<IAnalyzeResult> {
@@ -16,8 +25,8 @@ export async function analyzeDocument(text: string): Promise<IAnalyzeResult> {
                 "results": {
                     "summary": "string",
                     "clauseSummary": ["list of clause summaries"],
-                    "riskScore": "number from 1-10",
-                    "fairnessScore": "number from 1-10",
+                    "riskScore": "number from 1-100",
+                    "fairnessScore": "number from 1-100",
                     "keyTerms": ["important terms"],
                     "risks": ["potential risks"],
                     "suggestions": ["improvement suggestions"],
@@ -25,12 +34,22 @@ export async function analyzeDocument(text: string): Promise<IAnalyzeResult> {
                     "redFlags": ["concerning items"]
                 }
             }
+
+            Return ONLY the JSON object. Do not wrap it in markdown code blocks or add any additional text. Start your response with { and end with }.
             
             Document to analyze:\n${text}
         `);
-        const result = await response.response.text();
-        return JSON.parse(result) as IAnalyzeResult;
         
+        const result = await response.response.text();
+        const cleanJSON = extractJSON(result);
+
+        const validateResult = AnalyzeResultSchema.parse(JSON.parse(cleanJSON));
+        if (!validateResult) {
+            throw new Error("Invalid response format");
+        }
+
+        return validateResult as IAnalyzeResult;
+
     } catch (error) {
         console.error("Error analyzing document:", error);
         throw new Error("Failed to analyze document");
