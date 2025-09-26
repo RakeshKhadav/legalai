@@ -17,7 +17,7 @@ function extractJSON(text: string): string {
 export async function analyzeDocument(text: string): Promise<IAnalyzeResult> {
     try {
         const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
         const response = await model.generateContent(`
             Analyze the following document and return a JSON object with these properties:
             {
