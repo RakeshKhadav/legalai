@@ -6,12 +6,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Upload, File, AlertCircle } from 'lucide-react'
 import Loading from '../ui/loading'
+import { IAnalyzeResult } from '@/app/types'
+import ResultDisplay from './ResultDisplay'
 
 const FileUpload = () => {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
-  const [extractedText, setExtractedText] = useState<string>('');
+  const [resultText, setResultText] = useState<IAnalyzeResult | null>(null);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
 
   const extractText = async (file: File) => {
@@ -21,21 +23,21 @@ const FileUpload = () => {
     formData.append('file', file);
     
     try {
-      const response = await fetch('/api/extract-text', {
+      const response = await fetch('/api/analyze-document', {
         method: 'POST',
         body: formData
       })
       if(response.ok) {
         const data = await response.json();
-        setExtractedText(data.text);
+        setResultText(data.data);
         setError('');
       } else {
         setError('Failed to extract text from the document.');
-        setExtractedText('');
+        setResultText(null);
       }
     } catch (error) {
-      setError('An error occurred while extracting text.');
-      setExtractedText('');
+      setError('An error occurred while extracting text.' + error);
+      setResultText(null);
     } finally {
       setIsExtracting(false);
     }
@@ -136,6 +138,8 @@ const FileUpload = () => {
           </CardContent>
         </Card>
       )}
+
+      {resultText && !error && <ResultDisplay result={resultText} />}
     </div>
   )
 }

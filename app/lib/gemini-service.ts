@@ -41,9 +41,9 @@ export async function analyzeDocument(text: string): Promise<IAnalyzeResult> {
         `);
         
         const result = await response.response.text();
-        const cleanJSON = extractJSON(result);
+        // const cleanJSON = extractJSON(result);
 
-        const validateResult = AnalyzeResultSchema.parse(JSON.parse(cleanJSON));
+        const validateResult = AnalyzeResultSchema.parse(JSON.parse(result));
         if (!validateResult) {
             throw new Error("Invalid response format");
         }

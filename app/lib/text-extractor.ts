@@ -41,10 +41,7 @@ export async function extractTextFromFile(file: File): Promise<string> {
         } else {
             throw new Error('Unsupported file type. Only PDF and DOCX are supported.');
         }
-
-        console.log('Raw Extracted Text:', rawText);
         
-
         return cleanExtractedText(rawText);
     } catch (error) {
         console.error('Error extracting text from file:', error);

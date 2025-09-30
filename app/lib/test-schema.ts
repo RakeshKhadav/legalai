@@ -68,5 +68,6 @@ export async function testingSchema() {
 
     } catch (error) {
         throw new Error("Database connection failed");
-    } 
+        console.log(error);
+    }
 }
